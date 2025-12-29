@@ -3,6 +3,9 @@
 import os
 
 import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.utils.data import DataLoader, TensorDataset
 
 from models import CNN, MLP
 from utils.train_model import train
@@ -14,15 +17,25 @@ class TestTraining:
     def test_train_smoke_test_cnn(self, tmp_path):
         """Smoke test: verify training runs without errors for CNN."""
         # Create a minimal dataset
-        dataset = [(torch.randn(1, 3, 32, 32), torch.tensor([0])) for _ in range(10)]
+        samples = torch.randn(10, 3, 32, 32)
+        labels = torch.zeros(10, dtype=torch.long)
+        dataset = TensorDataset(samples, labels)
+        train_loader = DataLoader(dataset, batch_size=2, shuffle=False)
 
         model = CNN()
+        device = torch.device("cpu")
+        model.to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
         output_path = str(tmp_path / "cnn_weights")
 
         # Train for just 2 epochs
         train(
             model=model,
-            dataset=dataset,
+            train_loader=train_loader,
+            criterion=criterion,
+            optimizer=optimizer,
+            device=device,
             epochs=2,
             patience=10,
             output_path=output_path,
@@ -38,15 +51,25 @@ class TestTraining:
     def test_train_smoke_test_mlp(self, tmp_path):
         """Smoke test: verify training runs without errors for MLP."""
         # Create a minimal dataset
-        dataset = [(torch.randn(1, 784), torch.tensor([i % 10])) for i in range(20)]
+        samples = torch.randn(20, 784)
+        labels = torch.tensor([i % 10 for i in range(20)], dtype=torch.long)
+        dataset = TensorDataset(samples, labels)
+        train_loader = DataLoader(dataset, batch_size=4, shuffle=False)
 
         model = MLP(in_dim=784, out_dim=10, hidden_dim=64)
+        device = torch.device("cpu")
+        model.to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
         output_path = str(tmp_path / "mlp_weights")
 
         # Train for just 2 epochs
         train(
             model=model,
-            dataset=dataset,
+            train_loader=train_loader,
+            criterion=criterion,
+            optimizer=optimizer,
+            device=device,
             epochs=2,
             patience=10,
             output_path=output_path,
@@ -59,15 +82,25 @@ class TestTraining:
     def test_train_early_stopping(self, tmp_path):
         """Test that early stopping works."""
         # Create a dataset with constant loss
-        dataset = [(torch.randn(1, 3, 32, 32), torch.tensor([0])) for _ in range(5)]
+        samples = torch.randn(5, 3, 32, 32)
+        labels = torch.zeros(5, dtype=torch.long)
+        dataset = TensorDataset(samples, labels)
+        train_loader = DataLoader(dataset, batch_size=1, shuffle=False)
 
         model = CNN()
+        device = torch.device("cpu")
+        model.to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
         output_path = str(tmp_path / "early_stop_weights")
 
         # Train with very low patience
         train(
             model=model,
-            dataset=dataset,
+            train_loader=train_loader,
+            criterion=criterion,
+            optimizer=optimizer,
+            device=device,
             epochs=100,  # Set high but expect early stop
             patience=2,
             output_path=output_path,
@@ -79,14 +112,24 @@ class TestTraining:
 
     def test_train_saves_best_model(self, tmp_path):
         """Test that best model is saved during training."""
-        dataset = [(torch.randn(1, 3, 32, 32), torch.tensor([0])) for _ in range(10)]
+        samples = torch.randn(10, 3, 32, 32)
+        labels = torch.zeros(10, dtype=torch.long)
+        dataset = TensorDataset(samples, labels)
+        train_loader = DataLoader(dataset, batch_size=2, shuffle=False)
 
         model = CNN()
+        device = torch.device("cpu")
+        model.to(device)
+        criterion = nn.CrossEntropyLoss()
+        optimizer = optim.Adam(model.parameters(), lr=0.001)
         output_path = str(tmp_path / "best_model_weights")
 
         train(
             model=model,
-            dataset=dataset,
+            train_loader=train_loader,
+            criterion=criterion,
+            optimizer=optimizer,
+            device=device,
             epochs=3,
             patience=10,
             output_path=output_path,
