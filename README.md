@@ -2,6 +2,8 @@
 
 ![Tests](https://github.com/alexisvannson/computer-vision/actions/workflows/test.yml/badge.svg)
 ![Lint](https://github.com/alexisvannson/computer-vision/actions/workflows/lint.yml/badge.svg)
+![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
+![Python](https://img.shields.io/badge/python-3.12+-blue.svg)
 
 A PyTorch-based computer vision project implementing various neural network architectures including CNNs, MLPs, and exploring advanced topics like attention mechanisms, transfer learning, and generative models.
 
