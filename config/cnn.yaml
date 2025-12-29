@@ -1,8 +1,11 @@
 # CNN Model Configuration
 
 model_params:
-  in_channels: 3
-  num_classes: 10
+  in_dim: 3
+  out_dim: 10
+  hidden_dim: 64
+  hidden_layers: 3
+  norm_type: 'BatchNorm2d'
 
 transforms:
   img_size: 128  # Standard image size for CNN

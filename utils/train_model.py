@@ -1,12 +1,8 @@
+import argparse
 import os
 import sys
 import time
 from datetime import datetime
-
-# Add project root to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
-import argparse
 
 import torch
 import torch.nn as nn
@@ -14,6 +10,9 @@ import torch.optim as optim
 import yaml
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+
+# Add project root to path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 # Model Registry: Maps model names to (module_path, class_name)
 MODEL_REGISTRY = {
