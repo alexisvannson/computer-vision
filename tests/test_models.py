@@ -10,12 +10,12 @@ class TestCNN:
 
     def test_cnn_initialization(self):
         """Test that CNN can be initialized."""
-        model = CNN()
+        model = CNN(in_dim=3, out_dim=10)
         assert model is not None
 
     def test_cnn_forward_pass(self):
         """Test CNN forward pass with correct input shape."""
-        model = CNN()
+        model = CNN(in_dim=3, out_dim=10)
         # Batch size=2, 3 channels (RGB), 32x32 image
         x = torch.randn(2, 3, 32, 32)
         output = model(x)
@@ -24,14 +24,14 @@ class TestCNN:
 
     def test_cnn_single_sample(self):
         """Test CNN with single sample."""
-        model = CNN()
+        model = CNN(in_dim=3, out_dim=10)
         x = torch.randn(1, 3, 32, 32)
         output = model(x)
         assert output.shape == (1, 10)
 
     def test_cnn_gradient_flow(self):
         """Test that gradients flow through the network."""
-        model = CNN()
+        model = CNN(in_dim=3, out_dim=10)
         x = torch.randn(2, 3, 32, 32)
         output = model(x)
         loss = output.sum()
@@ -113,14 +113,14 @@ class TestModelSaveLoad:
 
     def test_cnn_save_load(self, tmp_path):
         """Test CNN state dict save and load."""
-        model = CNN()
+        model = CNN(in_dim=3, out_dim=10)
         save_path = tmp_path / "test_cnn.pth"
 
         # Save model
         torch.save(model.state_dict(), save_path)
 
         # Load into new model
-        new_model = CNN()
+        new_model = CNN(in_dim=3, out_dim=10)
         new_model.load_state_dict(torch.load(save_path))
 
         # Test that loaded model works

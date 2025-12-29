@@ -22,7 +22,7 @@ class TestTraining:
         dataset = TensorDataset(samples, labels)
         train_loader = DataLoader(dataset, batch_size=2, shuffle=False)
 
-        model = CNN()
+        model = CNN(in_dim=3, out_dim=10)
         device = torch.device("cpu")
         model.to(device)
         criterion = nn.CrossEntropyLoss()
@@ -87,7 +87,7 @@ class TestTraining:
         dataset = TensorDataset(samples, labels)
         train_loader = DataLoader(dataset, batch_size=1, shuffle=False)
 
-        model = CNN()
+        model = CNN(in_dim=3, out_dim=10)
         device = torch.device("cpu")
         model.to(device)
         criterion = nn.CrossEntropyLoss()
@@ -117,7 +117,7 @@ class TestTraining:
         dataset = TensorDataset(samples, labels)
         train_loader = DataLoader(dataset, batch_size=2, shuffle=False)
 
-        model = CNN()
+        model = CNN(in_dim=3, out_dim=10)
         device = torch.device("cpu")
         model.to(device)
         criterion = nn.CrossEntropyLoss()
