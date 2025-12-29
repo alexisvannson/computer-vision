@@ -1,0 +1,27 @@
+# MLP Model Configuration
+
+model_params:
+  in_dim: 49152  # 3 * 128 * 128
+  out_dim: 10
+  hidden_dim: 64
+  hidden_layers: 2
+  activation: 'ReLU'
+  initializer: null
+  norm_type: 'LayerNorm'
+
+transforms:
+  img_size: 128  # MLP flattens input
+  normalize: true
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+
+data:
+  root: 'data/Dataset'
+  batch_size: 64  # MLP can handle larger batches
+  shuffle: true
+
+training:
+  epochs: 20
+  patience: 5
+  learning_rate: 0.001
+  output_path: 'models/checkpoints'
