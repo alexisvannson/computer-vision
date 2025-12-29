@@ -1,5 +1,8 @@
 # Computer Vision Project
 
+![Tests](https://github.com/alexisvannson/computer-vision/actions/workflows/test.yml/badge.svg)
+![Lint](https://github.com/alexisvannson/computer-vision/actions/workflows/lint.yml/badge.svg)
+
 A PyTorch-based computer vision project implementing various neural network architectures including CNNs, MLPs, and exploring advanced topics like attention mechanisms, transfer learning, and generative models.
 
 ## Features
