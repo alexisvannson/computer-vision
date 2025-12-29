@@ -12,3 +12,5 @@ computer-vision/
 
 *.png
 .DS_Store
+
+.coverage

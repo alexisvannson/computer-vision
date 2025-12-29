@@ -34,7 +34,8 @@ def train(
 
     # Write training start info
     with open(log_path, "w") as the_file:
-        the_file.write(f"Training started at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        timestamp_str = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        the_file.write(f"Training started at: {timestamp_str}\n")
         the_file.write(f"Epochs: {epochs}, Patience: {patience}\n")
         the_file.write(f"Output path: {output_path}\n")
         the_file.write("-" * 50 + "\n")
@@ -59,9 +60,12 @@ def train(
         print(f"epoch: {epoch + 1} needed {checkpoint2 - checkpoint1} time")
         # Save training logs in the same directory as the weights
         with open(log_path, "a") as the_file:
-            the_file.write(f"Epoch {epoch+1}/{epochs}, avg_loss={avg_loss:.4f}\n")
             the_file.write(
-                f"Epoch {epoch+1}/{epochs}, needed {(checkpoint2 - checkpoint1) / 60:.2f} minutes\n"
+                f"Epoch {epoch+1}/{epochs}, avg_loss={avg_loss:.4f}\n"
+            )
+            time_mins = (checkpoint2 - checkpoint1) / 60
+            the_file.write(
+                f"Epoch {epoch+1}/{epochs}, needed {time_mins:.2f} minutes\n"
             )
 
         # Early stopping
@@ -69,7 +73,9 @@ def train(
             best_loss = avg_loss
             patience_counter = 0
             # Save best model in the same directory as final model
-            best_model_path = os.path.join(output_path, f"best_model_epoch{epoch+1}.pth")
+            best_model_path = os.path.join(
+                output_path, f"best_model_epoch{epoch+1}.pth"
+            )
             torch.save(model.state_dict(), best_model_path)
             print(f"Saved best model: {best_model_path}")
         else:
@@ -87,6 +93,7 @@ def train(
     # Write training completion info to log
     with open(log_path, "a") as the_file:
         the_file.write("-" * 50 + "\n")
-        the_file.write(f"Training completed at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+        completion_time = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+        the_file.write(f"Training completed at: {completion_time}\n")
         the_file.write(f"Best loss achieved: {best_loss:.4f}\n")
         the_file.write(f"Final model saved: {final_model_path}\n")

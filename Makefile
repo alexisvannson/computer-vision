@@ -6,11 +6,9 @@ help:
 	@echo "Available commands:"
 	@echo "  make install          Install production dependencies"
 	@echo "  make install-dev      Install development dependencies"
-	@echo "  make test             Run tests"
-	@echo "  make test-cov         Run tests with coverage report"
+	@echo "  make test             Run tests ith coverage report"
 	@echo "  make lint             Run linting (flake8)"
 	@echo "  make format           Format code with black and isort"
-	@echo "  make format-check     Check code formatting without modifying"
 	@echo "  make train            Train model (use SCRIPT=path/to/script.py)" 
 	@echo "  make type-check       Run type checking with mypy"
 	@echo "  make clean            Remove build artifacts and cache files"
@@ -23,9 +21,6 @@ install-dev:
 	pip install -r requirements-dev.txt
 
 test:
-	pytest
-
-test-cov:
 	pytest --cov --cov-report=html --cov-report=term
 
 lint:
@@ -34,10 +29,6 @@ lint:
 format:
 	black models utils tests
 	isort models utils tests
-
-format-check:
-	black --check models utils tests
-	isort --check-only models utils tests
 
 type-check:
 	mypy models utils

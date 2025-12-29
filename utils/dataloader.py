@@ -48,7 +48,8 @@ class DatasetLoader(Dataset):
         )
 
         self.dataset = datasets.ImageFolder(
-            skip_path if skip_creation else self.dataset_path, transform=self.transform
+            skip_path if skip_creation else self.dataset_path,
+            transform=self.transform
         )
 
     def __len__(self):
