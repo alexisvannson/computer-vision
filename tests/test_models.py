@@ -1,7 +1,8 @@
 """Tests for neural network models."""
 
-import torch
 import pytest
+import torch
+
 from models import CNN, MLP
 
 
@@ -59,7 +60,7 @@ class TestMLP:
 
     def test_mlp_with_image_input(self):
         """Test MLP flattens image input correctly."""
-        model = MLP(in_dim=3*32*32, out_dim=10)
+        model = MLP(in_dim=3 * 32 * 32, out_dim=10)
         # Image input: batch_size=2, 3 channels, 32x32
         x = torch.randn(2, 3, 32, 32)
         output = model(x)
