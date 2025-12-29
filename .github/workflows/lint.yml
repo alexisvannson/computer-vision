@@ -1,0 +1,39 @@
+name: Lint
+
+on:
+  push:
+    branches: [ main, walid-branch, cnn ]
+  pull_request:
+    branches: [ main, walid-branch, cnn ]
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.12'
+
+    - name: Install linting dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install black flake8 isort
+
+    - name: Check code formatting with Black
+      run: |
+        black --check --diff models/ utils/ tests/
+
+    - name: Check import sorting with isort
+      run: |
+        isort --check-only --diff models/ utils/ tests/
+
+    - name: Lint with flake8
+      run: |
+        # Stop the build if there are Python syntax errors or undefined names
+        flake8 models/ utils/ tests/ --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Exit-zero treats all errors as warnings. Max line length set to 100
+        flake8 models/ utils/ tests/ --count --max-line-length=100 --statistics --extend-ignore=E203,W503
