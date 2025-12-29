@@ -1,6 +1,7 @@
 import torch.nn as nn
 from torch import Tensor
 
+
 # Definition of a MLP
 class MLP(nn.Module):
     def __init__(
