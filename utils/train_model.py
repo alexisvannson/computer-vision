@@ -4,14 +4,14 @@ import time
 from datetime import datetime
 
 # Add project root to path
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+import argparse
 
 import torch
 import torch.nn as nn
 import torch.optim as optim
-import argparse
 import yaml
-
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
@@ -42,6 +42,7 @@ def register_model(name, module_path, class_name):
 def get_registered_models():
     """Get list of all registered model names."""
     return list(MODEL_REGISTRY.keys())
+
 
 def train(
     model,
@@ -136,14 +137,13 @@ def train(
         the_file.write(f"Final model saved: {final_model_path}\n")
 
 
-
 def load_config(model_name):
     """Load configuration for a specific model."""
     config_path = os.path.join("config", f"{model_name.lower()}.yaml")
     if not os.path.exists(config_path):
         raise FileNotFoundError(f"Config file not found: {config_path}")
 
-    with open(config_path, 'r') as f:
+    with open(config_path, "r") as f:
         config = yaml.safe_load(f)
     return config
 
@@ -154,10 +154,7 @@ def create_model(model_name, config):
 
     if model_key not in MODEL_REGISTRY:
         available_models = ", ".join(get_registered_models())
-        raise ValueError(
-            f"Unknown model: {model_name}. "
-            f"Available models: {available_models}"
-        )
+        raise ValueError(f"Unknown model: {model_name}. " f"Available models: {available_models}")
 
     # Get module and class name from registry
     module_path, class_name = MODEL_REGISTRY[model_key]
@@ -167,7 +164,7 @@ def create_model(model_name, config):
     ModelClass = getattr(module, class_name)
 
     # Instantiate model with config parameters
-    model = ModelClass(**config['model_params'])
+    model = ModelClass(**config["model_params"])
 
     return model
 
@@ -177,17 +174,17 @@ def get_transforms(config):
     transform_list = []
 
     # Resize if specified
-    if 'img_size' in config:
-        transform_list.append(transforms.Resize((config['img_size'], config['img_size'])))
+    if "img_size" in config:
+        transform_list.append(transforms.Resize((config["img_size"], config["img_size"])))
 
     transform_list.append(transforms.ToTensor())
 
     # Normalize if specified
-    if 'normalize' in config and config['normalize']:
+    if "normalize" in config and config["normalize"]:
         transform_list.append(
             transforms.Normalize(
-                mean=config.get('mean', [0.485, 0.456, 0.406]),
-                std=config.get('std', [0.229, 0.224, 0.225])
+                mean=config.get("mean", [0.485, 0.456, 0.406]),
+                std=config.get("std", [0.229, 0.224, 0.225]),
             )
         )
 
@@ -197,14 +194,16 @@ def get_transforms(config):
 def main():
     parser = argparse.ArgumentParser(description="Train model script")
     parser.add_argument("--model", type=str, required=True, help="Model name to train")
-    parser.add_argument("--config", type=str, default=None, help="Override default config file path")
+    parser.add_argument(
+        "--config", type=str, default=None, help="Override default config file path"
+    )
     args = parser.parse_args()
 
     model_name = args.model
 
     # Load configuration
     if args.config:
-        with open(args.config, 'r') as f:
+        with open(args.config, "r") as f:
             config = yaml.safe_load(f)
     else:
         config = load_config(model_name)
@@ -213,18 +212,17 @@ def main():
     model = create_model(model_name, config)
 
     # Setup transforms
-    transform = get_transforms(config.get('transforms', {}))
+    transform = get_transforms(config.get("transforms", {}))
 
     # Load dataset
-    data_config = config.get('data', {})
+    data_config = config.get("data", {})
     trainset = datasets.ImageFolder(
-        root=data_config.get('root', 'data/Dataset'),
-        transform=transform
+        root=data_config.get("root", "data/Dataset"), transform=transform
     )
     trainloader = DataLoader(
         trainset,
-        batch_size=data_config.get('batch_size', 32),
-        shuffle=data_config.get('shuffle', True)
+        batch_size=data_config.get("batch_size", 32),
+        shuffle=data_config.get("shuffle", True),
     )
 
     # Setup device
@@ -233,12 +231,9 @@ def main():
     print(f"Using device: {device}")
 
     # Setup training components
-    train_config = config.get('training', {})
+    train_config = config.get("training", {})
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(
-        model.parameters(),
-        lr=train_config.get('learning_rate', 0.001)
-    )
+    optimizer = optim.Adam(model.parameters(), lr=train_config.get("learning_rate", 0.001))
 
     # Train model
     train(
@@ -247,11 +242,12 @@ def main():
         criterion=criterion,
         optimizer=optimizer,
         device=device,
-        output_path=train_config.get('output_path', 'models/checkpoints'),
+        output_path=train_config.get("output_path", "models/checkpoints"),
         weights_name=model_name,
-        epochs=train_config.get('epochs', 20),
-        patience=train_config.get('patience', 5)
+        epochs=train_config.get("epochs", 20),
+        patience=train_config.get("patience", 5),
     )
+
 
 if __name__ == "__main__":
     main()

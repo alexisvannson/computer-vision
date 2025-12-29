@@ -14,3 +14,9 @@ computer-vision/
 .DS_Store
 
 .coverage
+
+htmlcov
+models/checkpoints
+trainning_stuff
+
+DOCKER_README.md
