@@ -68,10 +68,7 @@ class TestMLP:
     def test_mlp_different_hidden_layers(self):
         """Test MLP with different number of hidden layers."""
         for n_layers in [1, 2, 3, 5]:
-            model = MLP(
-                in_dim=100, out_dim=10, hidden_dim=64,
-                hidden_layers=n_layers
-            )
+            model = MLP(in_dim=100, out_dim=10, hidden_dim=64, hidden_layers=n_layers)
             x = torch.randn(4, 100)
             output = model(x)
             assert output.shape == (4, 10)

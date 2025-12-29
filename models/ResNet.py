@@ -7,23 +7,21 @@ class ResidualBlock(nn.Module):
     """
     A standard ResNet block: Two 3x3 convolutions with a skip connection.
     """
+
     def __init__(
-        self, in_channels, out_channels, stride=1,
-        downsample=None, norm_type="BatchNorm2d"
+        self, in_channels, out_channels, stride=1, downsample=None, norm_type="BatchNorm2d"
     ):
         super(ResidualBlock, self).__init__()
 
         NormLayer = getattr(nn, norm_type)
 
         self.conv1 = nn.Conv2d(
-            in_channels, out_channels, kernel_size=3,
-            stride=stride, padding=1, bias=False
+            in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False
         )
         self.bn1 = NormLayer(out_channels)
 
         self.conv2 = nn.Conv2d(
-            out_channels, out_channels, kernel_size=3,
-            stride=1, padding=1, bias=False
+            out_channels, out_channels, kernel_size=3, stride=1, padding=1, bias=False
         )
         self.bn2 = NormLayer(out_channels)
 
@@ -60,7 +58,7 @@ class ResNet(nn.Module):
         hidden_dim: int = 64,  # Starting number of filters
         # How many blocks in each stage (Default: ResNet18-like)
         layers: list = [2, 2, 2, 2],
-        norm_type: str = "BatchNorm2d"
+        norm_type: str = "BatchNorm2d",
     ):
         """
         Flexible ResNet Architecture.
@@ -73,10 +71,7 @@ class ResNet(nn.Module):
 
         # -- Stem (Initial Entry) --
         # 7x7 Conv to reduce image size quickly
-        self.conv1 = nn.Conv2d(
-            in_dim, hidden_dim, kernel_size=7,
-            stride=2, padding=3, bias=False
-        )
+        self.conv1 = nn.Conv2d(in_dim, hidden_dim, kernel_size=7, stride=2, padding=3, bias=False)
         self.bn1 = getattr(nn, norm_type)(hidden_dim)
         self.relu = nn.ReLU(inplace=True)
         self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
@@ -95,9 +90,7 @@ class ResNet(nn.Module):
         # Weight Initialization
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(
-                    m.weight, mode='fan_out', nonlinearity='relu'
-                )
+                nn.init.kaiming_normal_(m.weight, mode="fan_out", nonlinearity="relu")
             elif isinstance(m, (nn.BatchNorm2d, nn.GroupNorm)):
                 nn.init.constant_(m.weight, 1)
                 nn.init.constant_(m.bias, 0)
@@ -112,32 +105,20 @@ class ResNet(nn.Module):
         # Create a downsample layer if stride != 1 or channels change
         if stride != 1 or self.inplanes != planes:
             downsample = nn.Sequential(
-                nn.Conv2d(
-                    self.inplanes, planes, kernel_size=1,
-                    stride=stride, bias=False
-                ),
+                nn.Conv2d(self.inplanes, planes, kernel_size=1, stride=stride, bias=False),
                 NormLayer(planes),
             )
 
         layers = []
         # The first block handles the stride/downsampling
-        layers.append(
-            ResidualBlock(
-                self.inplanes, planes, stride,
-                downsample, self.norm_type
-            )
-        )
+        layers.append(ResidualBlock(self.inplanes, planes, stride, downsample, self.norm_type))
 
         # Update current channel count
         self.inplanes = planes
 
         # The rest of the blocks just process features (stride=1)
         for _ in range(1, blocks):
-            layers.append(
-                ResidualBlock(
-                    self.inplanes, planes, norm_type=self.norm_type
-                )
-            )
+            layers.append(ResidualBlock(self.inplanes, planes, norm_type=self.norm_type))
 
         return nn.Sequential(*layers)
 
