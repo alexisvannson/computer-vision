@@ -62,51 +62,6 @@ pip install -r requirements-dev.txt
 
 ## Usage
 
-### Training a Model
-
-Use the Makefile to train models:
-
-```bash
-# Train with a specific script
-make train SCRIPT=path/to/training_script.py
-
-# Example
-make train SCRIPT=train.py
-```
-
-### Using the CNN Model
-
-```python
-import torch
-from models.CNN import CNN
-
-# Initialize the model
-model = CNN()
-
-# Forward pass with a batch of images (batch_size, channels, height, width)
-input_tensor = torch.randn(32, 3, 32, 32)
-output = model(input_tensor)
-```
-
-### Using the MLP Model
-
-```python
-from models.MLP import MLP
-
-# Create a flexible MLP
-model = MLP(
-    in_dim=784,
-    out_dim=10,
-    hidden_dim=256,
-    hidden_layers=3,
-    activation="ReLU",
-    norm_type="LayerNorm"
-)
-
-# Forward pass
-input_tensor = torch.randn(32, 784)
-output = model(input_tensor)
-```
 
 ## Development
 
