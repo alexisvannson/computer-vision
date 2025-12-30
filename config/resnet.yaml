@@ -1,0 +1,25 @@
+# ResNet Model Configuration
+
+model_params:
+  in_dim: 3
+  out_dim: 10
+  hidden_dim: 64
+  layers: [2, 2, 2, 2]  # ResNet18-like architecture
+  norm_type: 'BatchNorm2d'
+
+transforms:
+  img_size: 224  # Standard image size for ResNet
+  normalize: true
+  mean: [0.485, 0.456, 0.406]
+  std: [0.229, 0.224, 0.225]
+
+data:
+  root: 'data/Dataset'
+  batch_size: 32
+  shuffle: true
+
+training:
+  epochs: 20
+  patience: 5
+  learning_rate: 0.001
+  output_path: 'models/checkpoints'

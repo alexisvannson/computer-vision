@@ -17,7 +17,7 @@ help:
 	@echo "  make format           Format code with black and isort"
 	@echo "  make train-model MODEL_NAME  Train a specific model"
 	@echo "                        Example: make train-model mlp"
-	@echo "                        Available: senet, vit, mlp, cnn"
+	@echo "                        Available: senet, vit, mlp, cnn, resnet"
 	@echo "  make type-check       Run type checking with mypy"
 	@echo "  make clean            Remove build artifacts and cache files"
 	@echo "  make all              Run format, lint, type-check, and test"
@@ -53,7 +53,7 @@ train-model:
 		echo "Error: Model name required"; \
 		echo "Usage: make train-model MODEL_NAME"; \
 		echo "Example: make train-model mlp"; \
-		echo "Available models: senet, vit, mlp, cnn"; \
+		echo "Available models: senet, vit, mlp, cnn, resnet"; \
 		exit 1; \
 	fi
 	@echo "Training model: $(MODEL_ARG)"
@@ -84,7 +84,7 @@ docker-train-model:
 		echo "Error: Model name required"; \
 		echo "Usage: make docker-train-model MODEL_NAME"; \
 		echo "Example: make docker-train-model mlp"; \
-		echo "Available models: senet, vit, mlp, cnn"; \
+		echo "Available models: senet, vit, mlp, cnn, resnet"; \
 		exit 1; \
 	fi
 	@echo "Training model in Docker: $(MODEL_ARG)"
