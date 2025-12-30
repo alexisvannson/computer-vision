@@ -10,6 +10,7 @@ import torch.optim as optim
 import yaml
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
+from tqdm import tqdm
 
 # Add project root to path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -20,8 +21,8 @@ MODEL_REGISTRY = {
     "vit": ("models.VIT", "VisionTransformer"),
     "mlp": ("models.MLP", "MLP"),
     "cnn": ("models.CNN", "CNN"),
+    "resnet": ("models.ResNet", "ResNet"),
 }
-
 
 def register_model(name, module_path, class_name):
     """
@@ -77,12 +78,15 @@ def train(
         the_file.write(f"Output path: {output_path}\n")
         the_file.write(f"Device: {device}\n")
         the_file.write("-" * 50 + "\n")
+	
+    print('start training')
+	
     for epoch in range(epochs):
         checkpoint1 = time.time()
         epoch_loss = 0
         num_batches = 0
         model.train()
-        for sample, label in train_loader:
+        for sample, label in tqdm(train_loader, desc=f"Epoch {epoch+1}/{epochs}", leave=False):
             # Move data to device
             sample = sample.to(device)
             label = label.to(device)
