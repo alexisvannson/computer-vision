@@ -222,14 +222,19 @@ def main():
 
     # Handle case where root is a list (for Colab/local compatibility)
     if isinstance(root_path, list):
-        # Try to find the first path that exists
+        # Try to find the first path that exists and contains subdirectories (class folders)
         for path in root_path:
-            if os.path.exists(path):
-                root_path = path
-                break
+            if os.path.exists(path) and os.path.isdir(path):
+                # Check if directory has subdirectories (required for ImageFolder)
+                subdirs = [d for d in os.listdir(path) if os.path.isdir(os.path.join(path, d))]
+                if subdirs:
+                    root_path = path
+                    print(f"Using dataset path: {path}")
+                    break
         else:
-            # If none exist, use the first one
+            # If none exist with subdirs, use the first one
             root_path = root_path[0]
+            print(f"Warning: No valid dataset path found. Using: {root_path}")
 
     trainset = datasets.ImageFolder(
         root=root_path, transform=transform
@@ -251,6 +256,21 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters(), lr=train_config.get("learning_rate", 0.001))
 
+    # Handle output_path list (for Colab/local compatibility)
+    output_path = train_config.get("output_paths", train_config.get("output_path", "models/checkpoints"))
+    if isinstance(output_path, list):
+        # Try to find first writable path (e.g., Google Drive might be mounted)
+        for path in output_path:
+            parent = os.path.dirname(path) if os.path.dirname(path) else "."
+            if os.path.exists(parent) and os.access(parent, os.W_OK):
+                output_path = path
+                print(f"Using output path: {path}")
+                break
+        else:
+            # Use first path and let os.makedirs create it
+            output_path = output_path[0]
+            print(f"Using output path: {output_path}")
+
     # Train model
     train(
         model=model,
@@ -258,7 +278,7 @@ def main():
         criterion=criterion,
         optimizer=optimizer,
         device=device,
-        output_path=train_config.get("output_path", "models/checkpoints"),
+        output_path=output_path,
         weights_name=model_name,
         epochs=train_config.get("epochs", 20),
         patience=train_config.get("patience", 5),
