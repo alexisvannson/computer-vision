@@ -125,23 +125,29 @@ def create_submission_csv(predictions, output_path):
 
 def main():
     parser = argparse.ArgumentParser(description="Kaggle inference script for emoji classification")
-    parser.add_argument("--model", type=str, required=True, help="Model name (e.g., resnet, cnn, mlp)")
-    parser.add_argument("--weights", type=str, required=True, help="Path to model weights (.pth file)")
     parser.add_argument(
-        "--config", type=str, default=None, help="Path to config file (defaults to config/{model}.yaml)"
+        "--model", type=str, required=True, help="Model name (e.g., resnet, cnn, mlp)"
+    )
+    parser.add_argument(
+        "--weights", type=str, required=True, help="Path to model weights (.pth file)"
+    )
+    parser.add_argument(
+        "--config",
+        type=str,
+        default=None,
+        help="Path to config file (defaults to config/{model}.yaml)",
     )
     parser.add_argument(
         "--test-dir", type=str, default="data/test", help="Directory containing test images"
     )
-    parser.add_argument(
-        "--output", type=str, default="submission.csv", help="Output CSV file path"
-    )
+    parser.add_argument("--output", type=str, default="submission.csv", help="Output CSV file path")
 
     args = parser.parse_args()
 
     # Load configuration
     if args.config:
         import yaml
+
         with open(args.config, "r") as f:
             config = yaml.safe_load(f)
     else:
