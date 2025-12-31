@@ -78,9 +78,9 @@ def train(
         the_file.write(f"Output path: {output_path}\n")
         the_file.write(f"Device: {device}\n")
         the_file.write("-" * 50 + "\n")
-	
+
     print('start training')
-	
+
     for epoch in range(epochs):
         checkpoint1 = time.time()
         epoch_loss = 0
@@ -217,11 +217,24 @@ def main():
     # Setup transforms
     transform = get_transforms(config.get("transforms", {}))
 
-    # Load dataset
     data_config = config.get("data", {})
+    root_path = data_config.get("root", "data/Dataset")
+
+    # Handle case where root is a list (for Colab/local compatibility)
+    if isinstance(root_path, list):
+        # Try to find the first path that exists
+        for path in root_path:
+            if os.path.exists(path):
+                root_path = path
+                break
+        else:
+            # If none exist, use the first one
+            root_path = root_path[0]
+
     trainset = datasets.ImageFolder(
-        root=data_config.get("root", "data/Dataset"), transform=transform
+        root=root_path, transform=transform
     )
+
     trainloader = DataLoader(
         trainset,
         batch_size=data_config.get("batch_size", 32),
