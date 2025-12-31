@@ -2,9 +2,9 @@
 
 model_params:
   in_dim: 3
-  out_dim: 10
+  out_dim: 7
   hidden_dim: 64
-  layers: [2, 2, 2, 2]  # ResNet18-like architecture
+  layers: [2, 2, 2, 2]  # ResNet18-like architecture   
   norm_type: 'BatchNorm2d'
 
 transforms:
@@ -21,9 +21,10 @@ data:
   shuffle: true
 
 training:
-  epochs: 30
-  patience: 5
+  epochs: 75  # Increased for better convergence with scheduler
+  patience: 10  # More patience for LR scheduler
   learning_rate: 0.001
+  weight_decay: 0.0001  # L2 regularization
   output_paths:
     - 'models/checkpoints/resnet'
     - '/content/drive/MyDrive/computer-vision-checkpoints/resnet'
