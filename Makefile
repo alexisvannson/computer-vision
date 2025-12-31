@@ -24,13 +24,6 @@ help:
 	@echo "  make type-check       Run type checking with mypy"
 	@echo "  make clean            Remove build artifacts and cache files"
 	@echo "  make all              Run format, lint, type-check, and test"
-	@echo ""
-	@echo "Docker commands:"
-	@echo "  make docker-build     Build Docker image"
-	@echo "  make docker-up        Start Docker container"
-	@echo "  make docker-down      Stop Docker container"
-	@echo "  make docker-train-model MODEL_NAME  Train model in Docker"
-	@echo "                        Example: make docker-train-model mlp"
 
 install:
 	pip install -r requirements.txt
