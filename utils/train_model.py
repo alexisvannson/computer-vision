@@ -355,7 +355,24 @@ def main():
     # Setup training components
     train_config = config.get("training", {})
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=train_config.get("learning_rate", 0.001))
+
+    # Create optimizer based on type
+    optimizer_type = train_config.get("optimizer", "Adam")
+    lr = train_config.get("learning_rate", 0.001)
+    weight_decay = train_config.get("weight_decay", 0.0)
+    momentum = train_config.get("momentum", 0.9)
+
+    if optimizer_type == "Adam":
+        optimizer = optim.Adam(model.parameters(), lr=lr, weight_decay=weight_decay)
+    elif optimizer_type == "AdamW":
+        optimizer = optim.AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
+    elif optimizer_type == "SGD":
+        optimizer = optim.SGD(
+            model.parameters(), lr=lr, weight_decay=weight_decay,
+            momentum=momentum, nesterov=True
+        )
+    else:
+        raise ValueError(f"Unknown optimizer: {optimizer_type}")
 
     # Handle output_path list (for Colab/local compatibility)
     output_path = train_config.get("output_paths", train_config.get("output_path", "models/checkpoints"))

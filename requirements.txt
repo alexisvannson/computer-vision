@@ -3,4 +3,10 @@ pandas
 torch
 torchvision
 pyyaml
+optuna>=3.5.0
+matplotlib>=3.8.0
+seaborn>=0.13.0
+scikit-learn>=1.4.0
+plotly>=5.18.0
+kaleido>=0.2.1
 transformers

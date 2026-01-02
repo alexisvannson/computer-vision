@@ -21,7 +21,7 @@ data:
   shuffle: true
 
 training:
-  epochs: 75  # Increased for better convergence with scheduler
+  epochs: 200  # Increased for better convergence with scheduler
   patience: 10  # More patience for LR scheduler
   learning_rate: 0.001
   weight_decay: 0.0001  # L2 regularization

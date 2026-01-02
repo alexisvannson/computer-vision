@@ -1,18 +1,17 @@
 
 
-# Capture model name argument for train-model and docker-train-model targets
-ifneq (,$(filter train-model docker-train-model,$(firstword $(MAKECMDGOALS))))
+# Capture model name argument for train-model, docker-train-model, and tune-model targets
+ifneq (,$(filter train-model docker-train-model tune-model,$(firstword $(MAKECMDGOALS))))
   MODEL_ARG := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   $(eval $(MODEL_ARG):;@:)
 endif
 
-# Capture model name argument for tune-model target
-ifneq (,$(filter tune-model,$(firstword $(MAKECMDGOALS))))
+fneq (,$(filter finetune-model,$(firstword $(MAKECMDGOALS))))
   MODEL_ARG := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
   $(eval $(MODEL_ARG):;@:)
 endif
 
-.PHONY: help install install-dev test test-cov lint format format-check type-check train-model tune-model kaggle-inference data-augmentation data-augmentation-dry-run clean pre-commit all docker-build docker-up docker-down docker-train-model
+.PHONY: help install install-dev test test-cov lint format format-check type-check train-model finetune-model tune-model kaggle-inference data-augmentation data-augmentation-dry-run clean pre-commit all docker-build docker-up docker-down docker-train-model
 
 help:
 	@echo "Available commands:"
@@ -24,9 +23,11 @@ help:
 	@echo "  make train-model MODEL_NAME  Train a specific model"
 	@echo "                        Example: make train-model mlp"
 	@echo "                        Available: senet, vit, mlp, cnn, resnet"
-	@echo "  make tune-model MODEL_NAME WEIGHTS=<path>"
+	@echo "  make finetune-model MODEL_NAME WEIGHTS=<path>"
 	@echo "                        Fine-tune a model with pretrained weights"
-	@echo "                        Example: make tune-model vit WEIGHTS=weights/vit.pth"
+	@echo "                        Example: make finetune-model vit WEIGHTS=weights/vit.pth"
+	@echo "  make tune-model MODEL_NAME [TRIALS=50]  Hyperparameter tuning"
+	@echo "                        Example: make tune-model cnn TRIALS=30"
 	@echo "  make kaggle-inference MODEL=<model> WEIGHTS=<path> [OUTPUT=submission.csv]"
 	@echo "                        Run inference on test set and create submission"
 	@echo "                        Example: make kaggle-inference MODEL=resnet WEIGHTS=models/checkpoints/resnet.pth"
@@ -72,19 +73,24 @@ train-model:
 tune-model:
 	@if [ -z "$(MODEL_ARG)" ]; then \
 		echo "Error: Model name required"; \
-		echo "Usage: make tune-model MODEL_NAME WEIGHTS=<path>"; \
-		echo "Example: make tune-model vit WEIGHTS=weights/vit.pth"; \
+		echo "Usage: make tune-model MODEL_NAME [TRIALS=50]"; \
+		echo "Example: make tune-model cnn TRIALS=30"; \
 		echo "Available models: senet, vit, mlp, cnn, resnet"; \
 		exit 1; \
 	fi
-	@if [ -z "$(WEIGHTS)" ]; then \
-		echo "Error: WEIGHTS parameter required"; \
-		echo "Usage: make tune-model MODEL_NAME WEIGHTS=<path>"; \
-		echo "Example: make tune-model vit WEIGHTS=weights/vit.pth"; \
+	@echo "Tuning hyperparameters for model: $(MODEL_ARG)"
+	@echo "Number of trials: $(if $(TRIALS),$(TRIALS),50)"
+	python utils/tune_hyperparameters.py --model $(MODEL_ARG) --n-trials $(if $(TRIALS),$(TRIALS),50)
+
+finetune-model:
+	@if [ -z "$(MODEL_ARG)" ] || [ -z "$(WEIGHTS)" ]; then \
+		echo "Error: MODEL and WEIGHTS are required"; \
+		echo "Usage: make finetune-model MODEL_NAME WEIGHTS=<path>"; \
+		echo "Example: make finetune-model vit WEIGHTS=weights/vit.pth"; \
+		echo "Available models: senet, vit, mlp, cnn, resnet"; \
 		exit 1; \
 	fi
-	@echo "Fine-tuning model: $(MODEL_ARG)"
-	@echo "Using pretrained weights: $(WEIGHTS)"
+	@echo "Finetuning model: $(MODEL_ARG) with weights from: $(WEIGHTS)"
 	python utils/train_model.py --model $(MODEL_ARG) --weights $(WEIGHTS)
 
 kaggle-inference:
