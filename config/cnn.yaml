@@ -15,9 +15,9 @@ transforms:
   std: [0.229, 0.224, 0.225]
 
 data:
-  root: 
-    - 'data/Dataset'
-    - '/content/dataset_cv/Dataset'
+  root:
+    - 'data/Dataset_combined'  # Local: use augmented balanced dataset
+    - '/content/dataset_cv/Dataset_combined'  # Colab: use augmented balanced dataset
   batch_size: 64
   shuffle: true
 
