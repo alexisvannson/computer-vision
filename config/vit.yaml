@@ -4,7 +4,7 @@ model_params:
   img_size: 224
   patch_size: 16
   in_channels: 3
-  num_classes: 10
+  num_classes: 7 # For 7 logo classes
   embed_dim: 768
   depth: 12
   num_heads: 12
