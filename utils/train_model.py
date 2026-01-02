@@ -8,7 +8,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import yaml
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from torchvision import datasets, transforms
 from tqdm import tqdm
 
@@ -18,7 +18,8 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 # Model Registry: Maps model names to (module_path, class_name)
 MODEL_REGISTRY = {
     "senet": ("models.SENET", "SENet"),
-    "vit": ("models.VIT", "VisionTransformer"),
+    "vit": ("models.VIT", "VisionTransformerPretrained"),  # Pre-trained ViT from HuggingFace
+    "vit-scratch": ("models.VIT", "VisionTransformer"),  # Custom ViT from scratch
     "mlp": ("models.MLP", "MLP"),
     "cnn": ("models.CNN", "CNN"),
     "resnet": ("models.ResNet", "ResNet"),
@@ -44,6 +45,45 @@ def get_registered_models():
     return list(MODEL_REGISTRY.keys())
 
 
+def validate(model, val_loader, criterion, device):
+    """
+    Validate the model on validation set.
+
+    Args:
+        model: The model to validate
+        val_loader: Validation data loader
+        criterion: Loss function
+        device: Device to run validation on
+
+    Returns:
+        tuple: (average_loss, accuracy)
+    """
+    model.eval()
+    val_loss = 0
+    correct = 0
+    total = 0
+
+    with torch.no_grad():
+        for sample, label in val_loader:
+            sample = sample.to(device)
+            label = label.to(device)
+
+            logits = model(sample)
+            loss = criterion(logits, label)
+
+            val_loss += loss.item()
+
+            # Calculate accuracy
+            _, predicted = torch.max(logits.data, 1)
+            total += label.size(0)
+            correct += (predicted == label).sum().item()
+
+    avg_loss = val_loss / len(val_loader)
+    accuracy = 100 * correct / total if total > 0 else 0
+
+    return avg_loss, accuracy
+
+
 def train(
     model,
     train_loader,
@@ -51,6 +91,7 @@ def train(
     optimizer,
     device,
     epochs,
+    val_loader=None,
     patience=5,
     output_path="weights",
     weights_name="final_model",
@@ -101,26 +142,53 @@ def train(
             epoch_loss += loss.item()
             num_batches += 1
 
-        avg_loss = epoch_loss / max(1, num_batches)
-        print(f"Epoch {epoch+1}/{epochs}, avg_loss={avg_loss:.4f}")
+        avg_train_loss = epoch_loss / max(1, num_batches)
         checkpoint2 = time.time()
-        print(f"epoch: {epoch + 1} needed {checkpoint2 - checkpoint1} time")
-        # Save training logs in the same directory as the weights
-        with open(log_path, "a") as the_file:
-            the_file.write(f"Epoch {epoch+1}/{epochs}, avg_loss={avg_loss:.4f}\n")
-            time_mins = (checkpoint2 - checkpoint1) / 60
-            the_file.write(f"Epoch {epoch+1}/{epochs}, needed {time_mins:.2f} minutes\n")
+        epoch_time = checkpoint2 - checkpoint1
 
-        # Early stopping
-        if avg_loss < best_loss:
-            best_loss = avg_loss
-            patience_counter = 0
-            # Save best model in the same directory as final model
-            best_model_path = os.path.join(output_path, f"best_model_epoch{epoch+1}.pth")
-            torch.save(model.state_dict(), best_model_path)
-            print(f"Saved best model: {best_model_path}")
+        # Run validation if val_loader is provided
+        if val_loader is not None:
+            val_loss, val_accuracy = validate(model, val_loader, criterion, device)
+            print(f"Epoch {epoch+1}/{epochs}, train_loss={avg_train_loss:.4f}, val_loss={val_loss:.4f}, val_acc={val_accuracy:.2f}%")
+
+            # Save training logs with validation metrics
+            with open(log_path, "a") as the_file:
+                the_file.write(f"Epoch {epoch+1}/{epochs}, train_loss={avg_train_loss:.4f}, val_loss={val_loss:.4f}, val_acc={val_accuracy:.2f}%\n")
+                time_mins = epoch_time / 60
+                the_file.write(f"Epoch {epoch+1}/{epochs}, needed {time_mins:.2f} minutes\n")
+
+            # Early stopping based on validation loss
+            if val_loss < best_loss:
+                best_loss = val_loss
+                patience_counter = 0
+                # Save best model in the same directory as final model
+                best_model_path = os.path.join(output_path, f"best_model_epoch{epoch+1}.pth")
+                torch.save(model.state_dict(), best_model_path)
+                print(f"Saved best model with val_loss={val_loss:.4f}: {best_model_path}")
+            else:
+                patience_counter += 1
         else:
-            patience_counter += 1
+            # No validation set - use training loss for early stopping
+            print(f"Epoch {epoch+1}/{epochs}, train_loss={avg_train_loss:.4f}")
+
+            # Save training logs without validation metrics
+            with open(log_path, "a") as the_file:
+                the_file.write(f"Epoch {epoch+1}/{epochs}, train_loss={avg_train_loss:.4f}\n")
+                time_mins = epoch_time / 60
+                the_file.write(f"Epoch {epoch+1}/{epochs}, needed {time_mins:.2f} minutes\n")
+
+            # Early stopping based on training loss
+            if avg_train_loss < best_loss:
+                best_loss = avg_train_loss
+                patience_counter = 0
+                # Save best model in the same directory as final model
+                best_model_path = os.path.join(output_path, f"best_model_epoch{epoch+1}.pth")
+                torch.save(model.state_dict(), best_model_path)
+                print(f"Saved best model with train_loss={avg_train_loss:.4f}: {best_model_path}")
+            else:
+                patience_counter += 1
+
+        print(f"Epoch {epoch + 1} took {epoch_time:.2f} seconds")
 
         if patience_counter >= patience:
             print(f"Early stopping at epoch {epoch+1}")
@@ -200,6 +268,9 @@ def main():
     parser.add_argument(
         "--config", type=str, default=None, help="Override default config file path"
     )
+    parser.add_argument(
+        "--weights", type=str, default=None, help="Path to pretrained weights for fine-tuning"
+    )
     args = parser.parse_args()
 
     model_name = args.model
@@ -236,15 +307,45 @@ def main():
             root_path = root_path[0]
             print(f"Warning: No valid dataset path found. Using: {root_path}")
 
-    trainset = datasets.ImageFolder(
+    # Load full dataset
+    full_dataset = datasets.ImageFolder(
         root=root_path, transform=transform
     )
 
-    trainloader = DataLoader(
-        trainset,
-        batch_size=data_config.get("batch_size", 32),
-        shuffle=data_config.get("shuffle", True),
-    )
+    # Split dataset into train and validation sets
+    val_split = data_config.get("val_split", 0.2)  # Default to 20% validation
+    if val_split > 0:
+        val_size = int(len(full_dataset) * val_split)
+        train_size = len(full_dataset) - val_size
+
+        # Use a fixed seed for reproducibility
+        generator = torch.Generator().manual_seed(42)
+        trainset, valset = random_split(full_dataset, [train_size, val_size], generator=generator)
+
+        print(f"Dataset split: {train_size} training samples, {val_size} validation samples")
+
+        # Create dataloaders
+        trainloader = DataLoader(
+            trainset,
+            batch_size=data_config.get("batch_size", 32),
+            shuffle=data_config.get("shuffle", True),
+        )
+
+        valloader = DataLoader(
+            valset,
+            batch_size=data_config.get("batch_size", 32),
+            shuffle=False,
+        )
+    else:
+        # No validation split - use entire dataset for training
+        trainset = full_dataset
+        trainloader = DataLoader(
+            trainset,
+            batch_size=data_config.get("batch_size", 32),
+            shuffle=data_config.get("shuffle", True),
+        )
+        valloader = None
+        print(f"No validation split. Using all {len(trainset)} samples for training.")
 
     # Setup device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -275,6 +376,7 @@ def main():
     train(
         model=model,
         train_loader=trainloader,
+        val_loader=valloader,
         criterion=criterion,
         optimizer=optimizer,
         device=device,
@@ -282,6 +384,7 @@ def main():
         weights_name=model_name,
         epochs=train_config.get("epochs", 20),
         patience=train_config.get("patience", 5),
+        start_weights=args.weights,
     )
 
 

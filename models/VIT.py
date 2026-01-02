@@ -2,6 +2,13 @@ import torch
 import torch.nn as nn
 from torch import Tensor
 
+try:
+    from transformers import ViTModel, ViTConfig
+    HF_AVAILABLE = True
+except ImportError:
+    HF_AVAILABLE = False
+    print("Warning: transformers library not available. Install with: pip install transformers")
+
 
 class PatchEmbedding(nn.Module):
     """
@@ -276,6 +283,95 @@ class VisionTransformer(nn.Module):
         x = self.head(x)  # [B, num_classes]
 
         return x
+
+
+class VisionTransformerPretrained(nn.Module):
+    """
+    Vision Transformer using Hugging Face pre-trained weights.
+    Supports models like 'google/vit-base-patch16-224-in21k' for fine-tuning.
+    """
+
+    def __init__(
+        self,
+        model_name="google/vit-base-patch16-224-in21k",
+        num_classes=1000,
+        freeze_backbone=False,
+        dropout=0.1,
+    ):
+        """
+        Args:
+            model_name: Hugging Face model identifier
+            num_classes: Number of output classes for your task
+            freeze_backbone: If True, freeze the backbone and only train the classifier
+            dropout: Dropout rate for the classifier head
+        """
+        super(VisionTransformerPretrained, self).__init__()
+
+        if not HF_AVAILABLE:
+            raise ImportError(
+                "transformers library is required for pretrained models. "
+                "Install with: pip install transformers"
+            )
+
+        # Load pre-trained ViT model (without classification head)
+        self.vit = ViTModel.from_pretrained(model_name, add_pooler_layer=False)
+
+        # Get the hidden size from the config
+        self.hidden_size = self.vit.config.hidden_size
+
+        # Optionally freeze the backbone
+        if freeze_backbone:
+            for param in self.vit.parameters():
+                param.requires_grad = False
+            print(f"Frozen backbone weights. Only training classifier head.")
+
+        # Custom classification head
+        self.classifier = nn.Sequential(
+            nn.LayerNorm(self.hidden_size),
+            nn.Dropout(dropout),
+            nn.Linear(self.hidden_size, num_classes),
+        )
+
+        # Initialize classifier weights
+        self._init_classifier()
+
+    def _init_classifier(self):
+        """Initialize the classifier head."""
+        for m in self.classifier.modules():
+            if isinstance(m, nn.Linear):
+                nn.init.trunc_normal_(m.weight, std=0.02)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+
+    def forward(self, x: Tensor):
+        """
+        Args:
+            x: [B, C, H, W] - Input images
+        Returns:
+            [B, num_classes] - Class logits
+        """
+        # Pass through ViT backbone
+        outputs = self.vit(pixel_values=x)
+
+        # Get the [CLS] token representation (first token)
+        cls_token = outputs.last_hidden_state[:, 0]
+
+        # Pass through classifier head
+        logits = self.classifier(cls_token)
+
+        return logits
+
+    def unfreeze_backbone(self):
+        """Unfreeze all backbone parameters for full fine-tuning."""
+        for param in self.vit.parameters():
+            param.requires_grad = True
+        print("Unfrozen backbone. Training all parameters.")
+
+    def freeze_backbone(self):
+        """Freeze backbone parameters (only train classifier)."""
+        for param in self.vit.parameters():
+            param.requires_grad = False
+        print("Frozen backbone. Only training classifier head.")
 
 
 # Common ViT configurations

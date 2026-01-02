@@ -1,13 +1,10 @@
-# Vision Transformer (ViT) Model Configuration
+# Vision Transformer (ViT) Model Configuration - Pretrained from HuggingFace
 
 model_params:
-  img_size: 224
-  patch_size: 16
-  in_channels: 3
-  num_classes: 7
-  embed_dim: 768
-  depth: 12
-  num_heads: 12
+  model_name: "google/vit-base-patch16-224-in21k"  # Pretrained model from HuggingFace
+  num_classes: 7  # Number of classes in your dataset
+  freeze_backbone: false  # Set to true to only train classifier head
+  dropout: 0.1  # Dropout rate for classifier head
 
 transforms:
   img_size: 224
@@ -21,6 +18,7 @@ data:
     - '/content/dataset_cv/Dataset_combined'  # Colab: use augmented balanced dataset
   batch_size: 16  # Smaller batch size for ViT (memory intensive)
   shuffle: true
+  val_split: 0.2  # 20% of data for validation
 
 training:
   epochs: 30
