@@ -214,9 +214,9 @@ if __name__ == "__main__":
     from VIT import ViT_Small
 
     # Example: Create ensemble of different models
-    model1 = CNN(in_dim=3, out_dim=10, hidden_dim=64)
-    model2 = ResNet(in_dim=3, out_dim=10, hidden_dim=64)
-    model3 = ViT_Small(num_classes=10, img_size=64)
+    model1 = CNN(in_dim=3, out_dim=7, hidden_dim=64)
+    model2 = ResNet(in_dim=3, out_dim=7, hidden_dim=64)
+    model3 = ViT_Small(num_classes=7, img_size=64)
 
     # Simple averaging ensemble
     ensemble_avg = Ensemble([model1, model2, model3], strategy="average")
@@ -231,7 +231,7 @@ if __name__ == "__main__":
     # Stacked ensemble with meta-learner
     ensemble_stacked = StackedEnsemble(
         [model1, model2, model3],
-        num_classes=10,
+        num_classes=7,
         meta_hidden_dim=128
     )
 
@@ -243,4 +243,4 @@ if __name__ == "__main__":
     output = ensemble_avg(dummy_input)
 
     print(f"Ensemble output shape: {output.shape}")
-    print(f"Expected shape: [4, 10]")
+    print(f"Expected shape: [4, 7]")
